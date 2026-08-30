@@ -1,0 +1,9 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# Redireciona /admin para /admin/ (serve public/admin/index.html)
+[[redirects]]
+  from = "/admin"
+  to = "/admin/"
+  status = 301

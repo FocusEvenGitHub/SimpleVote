@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SimpleVote — sistema de votação simples" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>" />
+  <title>SimpleVote — Votação</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1 class="title">VOTAÇÃO</h1>
+    <p class="subtitle">Escolha uma das opções abaixo</p>
+
+    <div id="vote-area" class="vote-area">
+      <button class="vote-btn vote-sim" data-option="sim" disabled>
+        <span class="vote-icon" aria-hidden="true">✓</span>
+        <span>SIM</span>
+      </button>
+      <button class="vote-btn vote-nao" data-option="nao" disabled>
+        <span class="vote-icon" aria-hidden="true">✕</span>
+        <span>NÃO</span>
+      </button>
+      <button class="vote-btn vote-abstencao" data-option="abstencao" disabled>
+        <span class="vote-icon" aria-hidden="true">○</span>
+        <span>SE ABSTER</span>
+      </button>
+    </div>
+
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <footer class="footer">SimpleVote</footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

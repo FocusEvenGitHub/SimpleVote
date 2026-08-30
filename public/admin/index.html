@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SimpleVote — administração" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>" />
+  <title>SimpleVote — Administração</title>
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <main class="container">
+    <h1 class="title">ADMINISTRAÇÃO</h1>
+
+    <!-- Login -->
+    <section id="login" class="card login-card">
+      <h2>Senha administrativa</h2>
+      <form id="login-form">
+        <input
+          type="password"
+          id="password-input"
+          placeholder="Digite a senha"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </form>
+      <p id="login-error" class="message error" role="alert"></p>
+    </section>
+
+    <!-- Painel -->
+    <section id="dashboard" class="hidden">
+      <div class="toolbar">
+        <span id="status-badge" class="badge">—</span>
+        <div class="toolbar-actions">
+          <button id="refresh-btn" class="btn btn-secondary">Atualizar</button>
+          <button id="toggle-btn" class="btn btn-secondary">—</button>
+          <button id="logout-btn" class="btn btn-ghost">Sair</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">RESULTADO</h2>
+
+      <div class="results-grid">
+        <article class="card result-card">
+          <h3 class="result-label sim">SIM</h3>
+          <p class="result-count"><span id="sim-count">0</span> votos</p>
+          <p class="result-percent" id="sim-percent">0%</p>
+          <div class="bar"><div class="bar-fill sim" id="sim-bar"></div></div>
+        </article>
+
+        <article class="card result-card">
+          <h3 class="result-label nao">NÃO</h3>
+          <p class="result-count"><span id="nao-count">0</span> votos</p>
+          <p class="result-percent" id="nao-percent">0%</p>
+          <div class="bar"><div class="bar-fill nao" id="nao-bar"></div></div>
+        </article>
+
+        <article class="card result-card">
+          <h3 class="result-label abstencao">ABSTENÇÃO</h3>
+          <p class="result-count"><span id="abstencao-count">0</span> votos</p>
+          <p class="result-percent" id="abstencao-percent">0%</p>
+          <div class="bar"><div class="bar-fill abstencao" id="abstencao-bar"></div></div>
+        </article>
+
+        <article class="card result-card total-card">
+          <h3 class="result-label">TOTAL</h3>
+          <p class="result-count"><span id="total-count">0</span> votos</p>
+        </article>
+      </div>
+
+      <div class="danger-zone">
+        <button id="reset-btn" class="btn btn-danger">Resetar votação</button>
+      </div>
+
+      <p id="admin-message" class="message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
