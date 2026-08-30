@@ -37,11 +37,12 @@ simplevote/
 │
 ├── netlify/
 │   └── functions/
-│       ├── _shared.js      # helpers compartilhados (não é uma Function)
-│       ├── vote.js         # POST /.netlify/functions/vote
-│       ├── results.js      # GET  /.netlify/functions/results (protegida)
-│       ├── reset.js        # POST /.netlify/functions/reset (protegida)
-│       └── session.js      # GET/POST /.netlify/functions/session
+│       ├── lib/
+│       │   └── shared.js    # helpers compartilhados (não é uma Function)
+│       ├── vote.js          # POST /.netlify/functions/vote
+│       ├── results.js       # GET  /.netlify/functions/results (protegida)
+│       ├── reset.js         # POST /.netlify/functions/reset (protegida)
+│       └── session.js       # GET/POST /.netlify/functions/session
 │
 ├── netlify.toml
 ├── package.json
@@ -56,13 +57,14 @@ simplevote/
 
 - A página pública busca a sessão atual em `/.netlify/functions/session`.
 - Se a votação estiver aberta e o navegador ainda não votou nesta sessão, os botões são habilitados.
-- Cada voto é um `POST` para `/.netlify/functions/vote` com `{ "option": "sim" | "nao" | "abstencao" }`.
-- O backend valida estritamente a opção e grava um blob independente no store `votes`:
+- Cada voto é um `POST` para `/.netlify/functions/vote` com `{ "option": "sim" | "nao" | "abstencao", "sessionId": "..." }`.
+- O backend valida a opção e confere se o `sessionId` enviado é o da sessão atual — se não for (ex.: o admin resetou enquanto a página estava aberta), responde `409` e o navegador re-sincroniza.
+- Cada voto é um blob independente dentro da sessão atual:
 
 ```text
-sim/550e8400-e29b-41d4-a716-446655440000
-nao/...
-abstencao/...
+sessions/{sessionId}/sim/550e8400-e29b-41d4-a716-446655440000
+sessions/{sessionId}/nao/...
+sessions/{sessionId}/abstencao/...
 ```
 
 - O navegador marca o voto em `localStorage` com a chave `simplevote_voted_{sessionId}`.
@@ -71,9 +73,13 @@ abstencao/...
 ### Administração
 
 - A senha é enviada no header `x-admin-password` em todas as chamadas administrativas.
-- `results` conta os blobs por prefixo (`sim/`, `nao/`, `abstencao/`) e retorna contagens, total e estado da votação.
-- `reset` apaga todos os votos e cria uma nova sessão (votação reaberta).
+- `results` conta apenas os blobs da sessão atual por prefixo (`sessions/{id}/sim/`, `sessions/{id}/nao/`, `sessions/{id}/abstencao/`) e retorna contagens, total e estado da votação.
+- `reset` é O(1): apenas troca a sessão. Os votos antigos deixam de pertencer à votação atual e a votação é reaberta.
 - `session` (POST) encerra ou reabre a votação.
+
+### Consistência
+
+O store usa **consistência forte** (`consistency: "strong"`), então encerrar/reabrir, reset e troca de `sessionId` ficam visíveis imediatamente para todos os leitores — sem o atraso de propagação da consistência eventual.
 
 ## Desenvolvimento local
 

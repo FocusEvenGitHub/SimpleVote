@@ -18,17 +18,24 @@ export function isAdmin(req) {
 }
 
 export function votesStore() {
-  return getStore({ name: STORE_NAME });
+  // Consistência forte: encerrar/reabrir, reset e troca de sessionId
+  // precisam ficar visíveis imediatamente para todos os leitores.
+  return getStore({ name: STORE_NAME, consistency: "strong" });
 }
 
 export async function getSession(store) {
-  try {
-    const existing = await store.get(SESSION_KEY, { type: "json" });
-    if (existing && existing.id) return existing;
-  } catch {
-    // sessão corrompida: recria abaixo
-  }
+  const existing = await store.get(SESSION_KEY, { type: "json" }).catch(() => null);
+  if (existing && existing.id) return existing;
+
   const session = { id: crypto.randomUUID(), open: true };
+  const { modified } = await store.setJSON(SESSION_KEY, session, { onlyIfNew: true });
+  if (modified) return session;
+
+  // Outra requisição criou a sessão primeiro: usa a que está gravada.
+  const created = await store.get(SESSION_KEY, { type: "json" }).catch(() => null);
+  if (created && created.id) return created;
+
+  // Sessão existente corrompida: sobrescreve.
   await store.setJSON(SESSION_KEY, session);
   return session;
 }
@@ -37,11 +44,4 @@ export async function countBlobs(store, prefix) {
   // list() sem paginate já retorna todas as páginas automaticamente
   const { blobs } = await store.list({ prefix });
   return blobs.length;
-}
-
-export async function deleteVotes(store) {
-  for (const prefix of VALID_OPTIONS.map((option) => `${option}/`)) {
-    const { blobs } = await store.list({ prefix });
-    await Promise.all(blobs.map((blob) => store.delete(blob.key)));
-  }
 }

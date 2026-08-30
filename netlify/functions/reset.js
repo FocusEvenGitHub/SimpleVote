@@ -1,4 +1,4 @@
-import { json, votesStore, deleteVotes, isAdmin, SESSION_KEY } from "./_shared.js";
+import { json, votesStore, isAdmin, SESSION_KEY } from "./lib/shared.js";
 
 export default async (req) => {
   if (req.method !== "POST") {
@@ -10,9 +10,9 @@ export default async (req) => {
   }
 
   const store = votesStore();
-  await deleteVotes(store);
 
-  // Nova sessão: quem já votou na sessão anterior pode votar novamente.
+  // Reset O(1): apenas troca a sessão. Os votos antigos ficam órfãos
+  // (não são mais contados) e quem votou antes pode votar novamente.
   await store.setJSON(SESSION_KEY, { id: crypto.randomUUID(), open: true });
 
   return json({ success: true });

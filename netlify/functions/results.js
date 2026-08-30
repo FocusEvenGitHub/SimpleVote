@@ -1,4 +1,4 @@
-import { json, votesStore, getSession, countBlobs, isAdmin } from "./_shared.js";
+import { json, votesStore, getSession, countBlobs, isAdmin } from "./lib/shared.js";
 
 export default async (req) => {
   if (req.method !== "GET") {
@@ -10,11 +10,11 @@ export default async (req) => {
   }
 
   const store = votesStore();
-  const [sim, nao, abstencao, session] = await Promise.all([
-    countBlobs(store, "sim/"),
-    countBlobs(store, "nao/"),
-    countBlobs(store, "abstencao/"),
-    getSession(store),
+  const session = await getSession(store);
+  const [sim, nao, abstencao] = await Promise.all([
+    countBlobs(store, `sessions/${session.id}/sim/`),
+    countBlobs(store, `sessions/${session.id}/nao/`),
+    countBlobs(store, `sessions/${session.id}/abstencao/`),
   ]);
 
   return json({

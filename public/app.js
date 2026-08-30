@@ -34,17 +34,19 @@ async function init() {
 
     if (!session.open) {
       showMessage("Votação encerrada.", "closed");
-      return; // botões permanecem desabilitados
+      return false;
     }
 
     if (localStorage.getItem(SESSION_KEY_PREFIX + sessionId)) {
       showMessage("Seu voto já foi registrado.", "info");
-      return; // botões permanecem desabilitados
+      return false;
     }
 
     setButtonsDisabled(false);
+    return true;
   } catch {
     showMessage("Não foi possível conectar ao servidor. Tente novamente mais tarde.", "error");
+    return false;
   }
 }
 
@@ -57,7 +59,7 @@ async function vote(option, button) {
     const res = await fetch("/.netlify/functions/vote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ option }),
+      body: JSON.stringify({ option, sessionId }),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -66,6 +68,19 @@ async function vote(option, button) {
       localStorage.setItem(SESSION_KEY_PREFIX + sessionId, "true");
       showMessage("Voto registrado com sucesso.", "success");
       return; // botões permanecem desabilitados
+    }
+
+    if (res.status === 409) {
+      // A votação foi resetada enquanto a página estava aberta:
+      // re-sincroniza com a nova sessão para permitir votar de novo.
+      const canVote = await init();
+      showMessage(
+        canVote
+          ? "A votação foi reiniciada. Você pode votar novamente."
+          : "A votação foi reiniciada. Atualize a página.",
+        "info"
+      );
+      return;
     }
 
     if (res.status >= 500) {

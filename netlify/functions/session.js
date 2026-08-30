@@ -1,4 +1,4 @@
-import { json, votesStore, getSession, isAdmin, SESSION_KEY } from "./_shared.js";
+import { json, votesStore, getSession, isAdmin, SESSION_KEY } from "./lib/shared.js";
 
 export default async (req) => {
   const store = votesStore();
