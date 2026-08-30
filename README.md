@@ -1,52 +1,66 @@
 # SimpleVote
 
-Sistema de votação extremamente simples, leve e fácil de hospedar no **Netlify**.
+Sistema simples de votação para reuniões, assembleias informais e decisões rápidas.
 
-Votação pública com três opções (**SIM**, **NÃO**, **SE ABSTER**) e uma área administrativa para acompanhar resultados, encerrar/reabrir e resetar a votação.
+O objetivo do **SimpleVote** é permitir que participantes votem de forma rápida entre três opções:
+
+* **Sim**
+* **Não**
+* **Se abster**
+
+O sistema possui uma página pública para votação e uma área administrativa para acompanhar os resultados, encerrar/reabrir a votação e iniciar uma nova votação.
 
 ## Funcionalidades
 
-- Votação pública com três opções: SIM, NÃO e SE ABSTER
-- Resultados administrativos com contagem, porcentagens e barras visuais
-- Reset da votação com criação de nova sessão (todos podem votar novamente)
-- Sessão de votação (`sessionId`) que impede votos repetidos no mesmo navegador
-- Encerrar / reabrir a votação
-- Proteção administrativa por senha (`ADMIN_PASSWORD`)
-- Armazenamento em Netlify Blobs — um blob por voto, sem problemas de concorrência
-- Interface mobile-first, sem frameworks
+* Votação pública com três opções
+* Resultados em tempo real na área administrativa
+* Contagem total de votos
+* Percentuais por opção
+* Barras visuais de resultado
+* Encerrar e reabrir votação
+* Reset rápido da votação
+* Nova sessão criada automaticamente após o reset
+* Bloqueio básico de voto repetido no mesmo navegador
+* Área administrativa protegida por senha
+* Interface responsiva para celular, tablet e computador
 
 ## Stack
 
-- HTML, CSS e JavaScript Vanilla
-- Netlify Functions
-- Netlify Blobs
-- Node.js
+O projeto foi desenvolvido com uma stack propositalmente simples:
+
+* HTML
+* CSS
+* JavaScript Vanilla
+* Netlify Functions
+* Netlify Blobs
+* Node.js
+
+Não utiliza frameworks frontend ou banco de dados tradicional.
 
 ## Estrutura
 
 ```text
-simplevote/
+SimpleVote/
 ├── public/
-│   ├── index.html          # página pública de votação (/)
+│   ├── index.html
 │   ├── style.css
 │   ├── app.js
 │   └── admin/
-│       ├── index.html      # área administrativa (/admin/)
+│       ├── index.html
 │       ├── admin.css
 │       └── admin.js
 │
 ├── netlify/
 │   └── functions/
 │       ├── lib/
-│       │   └── shared.js    # helpers compartilhados (não é uma Function)
-│       ├── vote.js          # POST /.netlify/functions/vote
-│       ├── results.js       # GET  /.netlify/functions/results (protegida)
-│       ├── reset.js         # POST /.netlify/functions/reset (protegida)
-│       └── session.js       # GET/POST /.netlify/functions/session
+│       │   └── shared.js
+│       ├── vote.js
+│       ├── results.js
+│       ├── reset.js
+│       └── session.js
 │
 ├── netlify.toml
 ├── package.json
-├── .gitignore
 ├── .env.example
 └── README.md
 ```
@@ -55,82 +69,180 @@ simplevote/
 
 ### Votação
 
-- A página pública busca a sessão atual em `/.netlify/functions/session`.
-- Se a votação estiver aberta e o navegador ainda não votou nesta sessão, os botões são habilitados.
-- Cada voto é um `POST` para `/.netlify/functions/vote` com `{ "option": "sim" | "nao" | "abstencao", "sessionId": "..." }`.
-- O backend valida a opção e confere se o `sessionId` enviado é o da sessão atual — se não for (ex.: o admin resetou enquanto a página estava aberta), responde `409` e o navegador re-sincroniza.
-- Cada voto é um blob independente dentro da sessão atual:
+A página principal:
 
 ```text
-sessions/{sessionId}/sim/550e8400-e29b-41d4-a716-446655440000
-sessions/{sessionId}/nao/...
-sessions/{sessionId}/abstencao/...
+/
 ```
 
-- O navegador marca o voto em `localStorage` com a chave `simplevote_voted_{sessionId}`.
-- Quando a votação é resetada, um novo `sessionId` é gerado — a chave muda e todos podem votar novamente.
+permite escolher entre:
 
-### Administração
+```text
+SIM
+NÃO
+SE ABSTER
+```
 
-- A senha é enviada no header `x-admin-password` em todas as chamadas administrativas.
-- `results` conta apenas os blobs da sessão atual por prefixo (`sessions/{id}/sim/`, `sessions/{id}/nao/`, `sessions/{id}/abstencao/`) e retorna contagens, total e estado da votação.
-- `reset` é O(1): apenas troca a sessão. Os votos antigos deixam de pertencer à votação atual e a votação é reaberta.
-- `session` (POST) encerra ou reabre a votação.
+Cada votação possui um `sessionId`.
 
-### Consistência
+Os votos são armazenados no Netlify Blobs seguindo uma estrutura semelhante a:
 
-O store usa **consistência forte** (`consistency: "strong"`), então encerrar/reabrir, reset e troca de `sessionId` ficam visíveis imediatamente para todos os leitores — sem o atraso de propagação da consistência eventual.
+```text
+sessions/{sessionId}/sim/{uuid}
+sessions/{sessionId}/nao/{uuid}
+sessions/{sessionId}/abstencao/{uuid}
+```
+
+Cada voto é armazenado individualmente.
+
+### Área administrativa
+
+A administração fica disponível em:
+
+```text
+/admin/
+```
+
+Após informar a senha administrativa é possível:
+
+* visualizar os resultados;
+* atualizar os resultados;
+* encerrar a votação;
+* reabrir a votação;
+* resetar a votação.
+
+Ao resetar, um novo `sessionId` é criado e a contagem volta para zero.
+
+## Prevenção de votos repetidos
+
+O frontend utiliza `localStorage` para impedir que o mesmo navegador vote novamente dentro da mesma sessão.
+
+Quando uma nova votação é criada, o `sessionId` muda e o navegador pode votar novamente normalmente.
+
+> Este mecanismo é propositalmente simples e não deve ser considerado autenticação de eleitor.
+
+O SimpleVote foi desenvolvido para reuniões e votações informais, e não para eleições oficiais ou situações que exijam garantia de identidade e de um único voto por pessoa.
 
 ## Desenvolvimento local
 
-Pré-requisitos: Node.js 18+.
+Instale as dependências:
 
 ```bash
 npm install
 ```
 
-Instale o Netlify CLI (uma vez):
+Instale o Netlify CLI, caso ainda não tenha:
 
 ```bash
 npm install -g netlify-cli
 ```
 
-Crie o arquivo `.env` a partir do exemplo:
+Crie um arquivo `.env` baseado no exemplo:
 
 ```bash
 cp .env.example .env
 ```
 
-Edite `ADMIN_PASSWORD` no `.env` e rode:
+Configure:
+
+```text
+ADMIN_PASSWORD=sua-senha
+```
+
+Depois execute:
 
 ```bash
 netlify dev
 ```
 
-Acesse:
+O projeto ficará disponível normalmente em:
 
-- Votação: `http://localhost:8888/`
-- Administração: `http://localhost:8888/admin/`
+```text
+http://localhost:8888
+```
+
+Área administrativa:
+
+```text
+http://localhost:8888/admin/
+```
 
 ## Deploy no Netlify
 
-1. Envie o projeto para um repositório no GitHub.
-2. No Netlify, clique em **Add new site → Import an existing project**.
-3. Conecte o repositório (o Netlify detecta `netlify.toml` automaticamente).
-4. Em **Site configuration → Environment variables**, adicione:
+1. Envie o projeto para o GitHub.
+2. Importe o repositório no Netlify.
+3. O Netlify utilizará automaticamente o `netlify.toml`.
+4. Configure a variável de ambiente:
 
-   ```text
-   ADMIN_PASSWORD=sua-senha-forte
-   ```
+```text
+ADMIN_PASSWORD
+```
 
-5. Clique em **Deploy**.
+5. Faça o deploy.
 
-Pronto. A cada `git push` na branch principal o site é atualizado automaticamente.
+A configuração utilizada pelo projeto é:
 
-## Variáveis de ambiente
+```toml
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+```
 
-| Variável        | Obrigatória | Descrição                          |
-| --------------- | ----------- | ---------------------------------- |
-| `ADMIN_PASSWORD`| Sim         | Senha da área administrativa.      |
+## Rotas
 
-Nunca commite a senha real — use apenas o `.env.example` como referência.
+### Público
+
+```text
+GET /.netlify/functions/session
+```
+
+Retorna informações sobre a votação atual.
+
+```text
+POST /.netlify/functions/vote
+```
+
+Registra um voto.
+
+### Administração
+
+```text
+GET /.netlify/functions/results
+```
+
+Retorna os resultados da votação atual.
+
+```text
+POST /.netlify/functions/session
+```
+
+Encerra ou reabre a votação.
+
+```text
+POST /.netlify/functions/reset
+```
+
+Cria uma nova sessão de votação.
+
+As rotas administrativas exigem a senha enviada pelo header:
+
+```text
+x-admin-password
+```
+
+## Uso recomendado
+
+O SimpleVote foi pensado principalmente para situações como:
+
+* reuniões de condomínio;
+* reuniões de associação;
+* decisões internas;
+* pequenas assembleias;
+* grupos e equipes;
+* votações rápidas em eventos.
+
+A proposta do projeto é ser simples, rápido e fácil de hospedar.
+
+## Licença
+
+Projeto livre para uso e adaptação conforme a necessidade.
