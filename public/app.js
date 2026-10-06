@@ -25,12 +25,22 @@ function setLoading(button, loading) {
   }
 }
 
+function renderHeader({ title, description }) {
+  const titleEl = document.getElementById("vote-title");
+  const descriptionEl = document.getElementById("vote-description");
+  titleEl.textContent = title || "VOTAÇÃO";
+  if (title) document.title = `${title} — SimpleVote`;
+  descriptionEl.textContent = description || "";
+  descriptionEl.classList.toggle("hidden", !description);
+}
+
 async function init() {
   try {
     const res = await fetch("/.netlify/functions/session");
     if (!res.ok) throw new Error("Falha ao buscar sessão");
     const session = await res.json();
     sessionId = session.id;
+    renderHeader(session);
 
     if (!session.open) {
       showMessage("Votação encerrada.", "closed");

@@ -7,10 +7,16 @@ export default async (req) => {
   // e qual é o sessionId atual (para a chave de localStorage).
   if (req.method === "GET") {
     const session = await getSession(store);
-    return json({ id: session.id, open: session.open });
+    return json({
+      id: session.id,
+      open: session.open,
+      title: session.title || "",
+      description: session.description || "",
+    });
   }
 
-  // POST administrativo: encerrar / reabrir a votação.
+  // POST administrativo: encerrar / reabrir a votação e/ou
+  // alterar título e descrição exibidos na página de votação.
   if (req.method === "POST") {
     if (!isAdmin(req)) {
       return json({ error: "Senha administrativa inválida." }, 401);
@@ -23,15 +29,31 @@ export default async (req) => {
       return json({ error: "Payload inválido." }, 400);
     }
 
-    if (typeof body?.open !== "boolean") {
+    const { open, title, description } = body ?? {};
+    const hasOpen = typeof open === "boolean";
+    const hasText = typeof title === "string" && typeof description === "string";
+    if (!hasOpen && !hasText) {
       return json({ error: "Payload inválido." }, 400);
+    }
+    if (hasText && (title.length > 120 || description.length > 1000)) {
+      return json({ error: "Título ou descrição muito longos." }, 400);
     }
 
     const session = await getSession(store);
-    session.open = body.open;
+    if (hasOpen) session.open = open;
+    if (hasText) {
+      session.title = title.trim();
+      session.description = description.trim();
+    }
     await store.setJSON(SESSION_KEY, session);
 
-    return json({ success: true, id: session.id, open: session.open });
+    return json({
+      success: true,
+      id: session.id,
+      open: session.open,
+      title: session.title || "",
+      description: session.description || "",
+    });
   }
 
   return json({ error: "Método não permitido." }, 405);
