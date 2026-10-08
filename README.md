@@ -13,6 +13,7 @@ O sistema possui uma página pública para votação e uma área administrativa 
 ## Funcionalidades
 
 * Votação pública com três opções
+* Título e descrição da votação editáveis pela área administrativa
 * Resultados em tempo real na área administrativa
 * Contagem total de votos
 * Percentuais por opção
@@ -105,13 +106,14 @@ A administração fica disponível em:
 
 Após informar a senha administrativa é possível:
 
+* definir o título e a descrição exibidos na página de votação;
 * visualizar os resultados;
 * atualizar os resultados;
 * encerrar a votação;
 * reabrir a votação;
 * resetar a votação.
 
-Ao resetar, um novo `sessionId` é criado e a contagem volta para zero.
+Ao resetar, um novo `sessionId` é criado e a contagem volta para zero. O título e a descrição são mantidos.
 
 ## Prevenção de votos repetidos
 
@@ -196,7 +198,7 @@ A configuração utilizada pelo projeto é:
 GET /.netlify/functions/session
 ```
 
-Retorna informações sobre a votação atual.
+Retorna informações sobre a votação atual (estado, `sessionId`, título e descrição).
 
 ```text
 POST /.netlify/functions/vote
@@ -216,7 +218,7 @@ Retorna os resultados da votação atual.
 POST /.netlify/functions/session
 ```
 
-Encerra ou reabre a votação.
+Encerra ou reabre a votação (`open`) e/ou altera o título e a descrição (`title`, `description`).
 
 ```text
 POST /.netlify/functions/reset

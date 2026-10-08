@@ -78,8 +78,9 @@ body {
 }
 
 #password-input,
-#title-input,
-#description-input {
+.info-form input,
+.info-form textarea {
+  font-family: inherit;
   padding: 14px 16px;
   font-size: 1rem;
   border: 1px solid var(--border);
@@ -89,32 +90,16 @@ body {
 }
 
 #password-input:focus,
-#title-input:focus,
-#description-input:focus {
+.info-form input:focus,
+.info-form textarea:focus {
   border-color: var(--accent);
 }
 
-/* Título e descrição */
-.info-card {
+.info-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 24px;
-}
-
-.info-card label {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-#description-input {
-  font-family: inherit;
-  resize: vertical;
-}
-
-.info-card .btn {
-  align-self: flex-end;
-  margin-top: 8px;
 }
 
 /* Botões */

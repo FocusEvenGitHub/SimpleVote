@@ -49,13 +49,12 @@ body {
 }
 
 .description {
-  font-size: 1.1rem;
   white-space: pre-line;
   overflow-wrap: anywhere;
   margin-bottom: 16px;
 }
 
-.hidden {
+.description:empty {
   display: none;
 }
 

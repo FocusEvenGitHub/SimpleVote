@@ -24,7 +24,7 @@ export default async (req) => {
     total: sim + nao + abstencao,
     sessionId: session.id,
     open: session.open,
-    title: session.title || "",
-    description: session.description || "",
+    title: session.title,
+    description: session.description,
   });
 };

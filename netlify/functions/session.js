@@ -4,19 +4,12 @@ export default async (req) => {
   const store = votesStore();
 
   // GET público: a página de votação precisa saber se a votação está aberta
-  // e qual é o sessionId atual (para a chave de localStorage).
+  // e qual é o sessionId atual (para a chave de localStorage), além do título e descrição.
   if (req.method === "GET") {
-    const session = await getSession(store);
-    return json({
-      id: session.id,
-      open: session.open,
-      title: session.title || "",
-      description: session.description || "",
-    });
+    return json(await getSession(store));
   }
 
-  // POST administrativo: encerrar / reabrir a votação e/ou
-  // alterar título e descrição exibidos na página de votação.
+  // POST administrativo: encerrar / reabrir a votação e/ou alterar título e descrição.
   if (req.method === "POST") {
     if (!isAdmin(req)) {
       return json({ error: "Senha administrativa inválida." }, 401);
@@ -29,31 +22,13 @@ export default async (req) => {
       return json({ error: "Payload inválido." }, 400);
     }
 
-    const { open, title, description } = body ?? {};
-    const hasOpen = typeof open === "boolean";
-    const hasText = typeof title === "string" && typeof description === "string";
-    if (!hasOpen && !hasText) {
-      return json({ error: "Payload inválido." }, 400);
-    }
-    if (hasText && (title.length > 120 || description.length > 1000)) {
-      return json({ error: "Título ou descrição muito longos." }, 400);
-    }
-
     const session = await getSession(store);
-    if (hasOpen) session.open = open;
-    if (hasText) {
-      session.title = title.trim();
-      session.description = description.trim();
-    }
+    if (typeof body?.open === "boolean") session.open = body.open;
+    if (typeof body?.title === "string") session.title = body.title.slice(0, 120);
+    if (typeof body?.description === "string") session.description = body.description.slice(0, 1000);
     await store.setJSON(SESSION_KEY, session);
 
-    return json({
-      success: true,
-      id: session.id,
-      open: session.open,
-      title: session.title || "",
-      description: session.description || "",
-    });
+    return json({ success: true, ...session });
   }
 
   return json({ error: "Método não permitido." }, 405);

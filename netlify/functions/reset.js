@@ -10,17 +10,12 @@ export default async (req) => {
   }
 
   const store = votesStore();
-  const current = await getSession(store);
 
   // Reset O(1): apenas troca a sessão. Os votos antigos ficam órfãos
   // (não são mais contados) e quem votou antes pode votar novamente.
-  // Título e descrição são mantidos; o admin pode editá-los depois.
-  await store.setJSON(SESSION_KEY, {
-    id: crypto.randomUUID(),
-    open: true,
-    title: current.title || "",
-    description: current.description || "",
-  });
+  // Título e descrição são mantidos.
+  const current = await getSession(store);
+  await store.setJSON(SESSION_KEY, { ...current, id: crypto.randomUUID(), open: true });
 
   return json({ success: true });
 };

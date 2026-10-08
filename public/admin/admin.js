@@ -11,10 +11,8 @@ const toggleBtn = document.getElementById("toggle-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const resetBtn = document.getElementById("reset-btn");
 const adminMessage = document.getElementById("admin-message");
-const infoForm = document.getElementById("info-form");
 const titleInput = document.getElementById("title-input");
 const descriptionInput = document.getElementById("description-input");
-const infoBtn = document.getElementById("info-btn");
 
 let currentOpen = true;
 
@@ -65,11 +63,8 @@ function renderResults(results) {
   document.getElementById("nao-bar").style.width = percent(results.nao) + "%";
   document.getElementById("abstencao-bar").style.width = percent(results.abstencao) + "%";
 
-  // Não sobrescreve o que o admin está digitando.
-  if (!infoForm.contains(document.activeElement)) {
-    titleInput.value = results.title || "";
-    descriptionInput.value = results.description || "";
-  }
+  titleInput.value = results.title || "";
+  descriptionInput.value = results.description || "";
 
   currentOpen = results.open;
   renderStatus();
@@ -128,28 +123,17 @@ loginForm.addEventListener("submit", async (event) => {
 
 refreshBtn.addEventListener("click", loadResults);
 
-infoForm.addEventListener("submit", async (event) => {
+document.getElementById("info-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  infoBtn.disabled = true;
-  showMessage("");
   try {
-    const { res, data } = await api("/.netlify/functions/session", {
+    const { res } = await api("/.netlify/functions/session", {
       method: "POST",
       body: JSON.stringify({ title: titleInput.value, description: descriptionInput.value }),
     });
-    if (res.ok) {
-      titleInput.value = data.title;
-      descriptionInput.value = data.description;
-      showMessage("Título e descrição salvos.", "success");
-    } else if (res.status === 401) {
-      showLogin();
-    } else {
-      showMessage(data.error || "Erro ao salvar título e descrição.", "error");
-    }
+    if (res.status === 401) return showLogin();
+    showMessage(res.ok ? "Título e descrição salvos." : "Erro ao salvar.", res.ok ? "success" : "error");
   } catch {
     showMessage("Erro de conexão. Tente novamente.", "error");
-  } finally {
-    infoBtn.disabled = false;
   }
 });
 
