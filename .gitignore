@@ -2,4 +2,5 @@ node_modules/
 .netlify/
 .env
 .DS_Store
-.idea/deno.lock
+.idea/
+deno.lock
